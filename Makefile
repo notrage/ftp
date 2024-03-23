@@ -29,7 +29,6 @@ all: $(PROGS)
 	
 %: %.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS)
-#	$(CC) -o $@ $(LDFLAGS) $(LIBS) $^
 	
 clean:
 	rm -f $(PROGS) *.o
