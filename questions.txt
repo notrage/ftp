@@ -1,0 +1,4 @@
+Question 1:
+    1. parfois le Open nous renvoie un "port already in use"
+    2. Avons-nous eu raison de retirer le "Close(listenfd)" ?
+    3. 
