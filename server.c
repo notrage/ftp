@@ -41,6 +41,28 @@ void creer_fils(int *proc_table){
     return;
 }
 
+void traiter_demande(int connfd){
+    size_t n;
+    char buf_file_name[MAX_NAME_LEN];
+    char buf_file_content[MAXBUF];
+    rio_t rio;
+    int fd;
+
+    Rio_readinitb(&rio, connfd);
+    if (Rio_readlineb(&rio, buf_file_name, MAX_NAME_LEN) != 0){
+        fprintf(stderr, "%s\n", buf_file_name);
+        fd = Open(buf_file_name, 0, O_RDONLY);
+        Rio_readinitb(&rio, fd);
+        while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0){
+            Rio_writen(connfd, buf_file_content, n);
+            printf("server read and sent %u bytes\n", (unsigned int)n);
+        }
+        Close(fd);
+    }
+
+    return;
+}
+
 /* 
  * Note that this code only works with IPv4 addresses
  * (IPv6 is not supported)
@@ -90,7 +112,8 @@ int main(int argc, char **argv)
                 printf("server connected to %s (%s)\n", client_hostname,
                         client_ip_string);
 
-                echo(connfd);
+
+                traiter_demande(connfd);
                 Close(connfd);
                 printf("client ended connection\n");
             }
