@@ -5,8 +5,8 @@
 
 int main(int argc, char **argv)
 {
-    int clientfd, port;
-    char *host, buf[MAXLINE];
+    int clientfd, port, fd, n;
+    char *host, buf[MAXLINE], buf_file_content[MAXBUF];
     rio_t rio;
 
     if (argc != 3) {
@@ -28,18 +28,22 @@ int main(int argc, char **argv)
      * and the server OS ... but it is possible that the server application
      * has not yet called "Accept" for this connection
      */
-    printf("client connected to server OS\n"); 
+    printf("client connected to server OS\n");
     
     Rio_readinitb(&rio, clientfd);
 
-    while (Fgets(buf, MAXLINE, stdin) != NULL) {
+    if (Fgets(buf, MAXLINE, stdin) != NULL) {
         Rio_writen(clientfd, buf, strlen(buf));
-        if (Rio_readlineb(&rio, buf, MAXLINE) > 0) {
-            Fputs(buf, stdout);
-        } else { /* the server has prematurely closed the connection */
-            break;
+        fd = Open(buf, O_WRONLY | O_CREAT, 0644);
+        while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0) {
+            printf("client read %u bytes\n", (unsigned int)n);
+            Rio_writen(fd, buf_file_content, n);
+            printf("client wrote %u bytes\n", (unsigned int)n);
         }
+        Close(fd);
     }
+
+
     Close(clientfd);
     exit(0);
 }

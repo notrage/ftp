@@ -22,7 +22,7 @@ INCLDIR = -I.
 PROGS = server client
 
 
-all: $(PROGS)
+all: clean $(PROGS)
 
 %.o: %.c $(INCLUDE)
 	$(CC) $(CFLAGS) $(INCLDIR) -c -o $@ $<

@@ -44,16 +44,19 @@ void creer_fils(int *proc_table){
 void traiter_demande(int connfd){
     size_t n;
     char buf_file_name[MAX_NAME_LEN];
+    char buf_file_path[MAXBUF] = "./fichiers/";
     char buf_file_content[MAXBUF];
     rio_t rio;
     int fd;
 
     Rio_readinitb(&rio, connfd);
     if (Rio_readlineb(&rio, buf_file_name, MAX_NAME_LEN) != 0){
-        fprintf(stderr, "%s\n", buf_file_name);
-        fd = Open(buf_file_name, 0, O_RDONLY);
+        strcat(buf_file_path, buf_file_name);
+        buf_file_path[strlen(buf_file_path)-1] = '\0';
+        printf("%s\n", buf_file_path);
+        fd = Open(buf_file_path, O_RDONLY, 0);
         Rio_readinitb(&rio, fd);
-        while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0){
+        while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0) {
             Rio_writen(connfd, buf_file_content, n);
             printf("server read and sent %u bytes\n", (unsigned int)n);
         }
