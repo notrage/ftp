@@ -22,13 +22,19 @@ INCLDIR = -I.
 PROGS = server client
 
 
-all: clean $(PROGS)
+all: clean $(PROGS) clean_o
 
 %.o: %.c $(INCLUDE)
 	$(CC) $(CFLAGS) $(INCLDIR) -c -o $@ $<
 	
+client: client.o $(OBJS)
+	$(CC) -o for_client_exchange/$@ $(LDFLAGS) $^ $(LIBS)
+
 %: %.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS)
+
+clean_o:
+	rm -f *.o
 	
 clean:
-	rm -f $(PROGS) *.o
+	rm -f $(PROGS) *.o for_client_exchange/client
