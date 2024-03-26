@@ -33,6 +33,7 @@ int main(int argc, char **argv)
     Rio_readinitb(&rio, clientfd);
 
     if (Fgets(buf, MAXLINE, stdin) != NULL) {
+        buf[strlen(buf) - 1] = '\0';
         Rio_writen(clientfd, buf, strlen(buf));
         fd = Open(buf, O_WRONLY | O_CREAT, 0644);
         while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0) {

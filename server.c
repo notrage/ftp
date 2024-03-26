@@ -52,7 +52,7 @@ void traiter_demande(int connfd){
     Rio_readinitb(&rio, connfd);
     if (Rio_readlineb(&rio, buf_file_name, MAX_NAME_LEN) != 0){
         strcat(buf_file_path, buf_file_name);
-        buf_file_path[strlen(buf_file_path)-1] = '\0';
+        //buf_file_path[strlen(buf_file_path)-1] = '\0';
         printf("%s\n", buf_file_path);
         fd = Open(buf_file_path, O_RDONLY, 0);
         Rio_readinitb(&rio, fd);
