@@ -35,6 +35,9 @@ client: client.o $(OBJS)
 
 clean_o:
 	rm -f *.o
+
+clean_storage:
+	rm -f for_client_exchange/*
 	
 clean:
 	rm -f $(PROGS) *.o for_client_exchange/client

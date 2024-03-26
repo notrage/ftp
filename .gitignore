@@ -1,4 +1,4 @@
-for_client_exchange/client
+for_client_exchange/*
 .nfs*
 client
 server

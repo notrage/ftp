@@ -3,10 +3,12 @@
  */
 #include "csapp.h"
 
+#define MAX_NAME_LEN 256
+
 int main(int argc, char **argv)
 {
-    int clientfd, port, fd, n;
-    char *host, buf[MAXLINE], buf_file_content[MAXBUF];
+    int clientfd, port, fd, n, file_size;
+    char *host, buf[MAXBUF], buf_file_name[MAX_NAME_LEN], buf_file_content[MAXBUF];
     rio_t rio;
 
     if (argc != 3) {
@@ -32,14 +34,35 @@ int main(int argc, char **argv)
     
     Rio_readinitb(&rio, clientfd);
 
-    if (Fgets(buf, MAXLINE, stdin) != NULL) {
-        buf[strlen(buf) - 1] = '\0';
-        Rio_writen(clientfd, buf, strlen(buf));
-        fd = Open(buf, O_WRONLY | O_CREAT, 0644);
+    if (Fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL) {
+
+        //There is a '\n' at the end of the line that need to be removed before sending it to the server
+        buf_file_name[strlen(buf_file_name) - 1] = '\0';        
+
+        Rio_writen(clientfd, buf_file_name, strlen(buf_file_name));
+
+        //Opening (creating) a file to store server's response
+        fd = Open(buf_file_name, O_WRONLY | O_CREAT, 0644);
+        
+        if ((n = Rio_readnb(&rio, buf, MAXBUF)) != 0) {
+            file_size = atoi(buf);
+        }
+        else
+        {
+            fprintf(stderr, "Error: Couldn't get file size\n");
+            Close(fd);
+            Close(clientfd);
+            exit(0);
+        }
+
         while((n = Rio_readnb(&rio, buf_file_content, MAXBUF)) != 0) {
-            printf("client read %u bytes\n", (unsigned int)n);
+            printf("client received %u bytes\n", (unsigned int)n);
             Rio_writen(fd, buf_file_content, n);
-            printf("client wrote %u bytes\n", (unsigned int)n);
+            file_size -= n;
+        }
+        
+        if (file_size != 0) {
+            fprintf(stderr, "Error: File missing parts\n");
         }
         Close(fd);
     }
