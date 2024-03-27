@@ -8,8 +8,9 @@
 
 int main(int argc, char **argv)
 {
+    size_t n;
     int clientfd, port, fd;
-    uint32_t buf[1], n, file_size;
+    uint32_t buf[1], file_size;
     char *host, buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT];
     rio_t rio;
 
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
         fd = Open(buf_file_name, O_WRONLY | O_CREAT, 0644);
         
         //Getting wanted size of wanted file
-        if ((n = Rio_readn(clientfd, buf, 1)) != 0) {
+        if ((n = Rio_readn(clientfd, buf, sizeof(uint32_t))) != 0) {
             file_size = buf[0];
         }
         else
@@ -59,20 +60,30 @@ int main(int argc, char **argv)
             exit(0);
         }
 
+        printf("%d\n", file_size);
         Rio_readinitb(&rio, clientfd);
 
         while((n = Rio_readnb(&rio, buf_file_content, MAX_BUF_CONTENT)) != 0) {
-            //printf("client received %u bytes\n", (unsigned int)n);
+            printf("client received %u bytes\n", (unsigned int)n);
             Rio_writen(fd, buf_file_content, n);
             file_size -= n;
-            printf("%d\n", file_size);
         }
+
         
         if (file_size == 0)
+        {
             fprintf(stdout, "Ending transmission\n");
-        else 
+        }
+        else if (file_size > 0)
+        {
             fprintf(stderr, "Error: File missing parts\n");
-
+            printf("%d\n", file_size);
+        }
+        else
+        {
+            fprintf(stderr, "Error: Too much bytes read\n");
+        }
+         
         Close(fd);
     }
 

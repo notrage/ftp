@@ -82,6 +82,8 @@ void traiter_demande(int connfd){
                 return;
             }
             buf_taille[0] = stats->st_size;
+            printf("%d\n", buf_taille[0]);
+
             // sending it to the client
             Rio_writen(connfd, buf_taille, sizeof(uint32_t)); 
             free(stats);
