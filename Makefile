@@ -7,7 +7,7 @@
 #.PRECIOUS: %.o
 
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 LDFLAGS =
 
 # Note: -lnsl does not seem to work on Mac OS but will
