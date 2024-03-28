@@ -55,7 +55,7 @@ void traiter_demande(int connfd){
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading number of char of this file name and file name 
-    if ((Rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
+    while ((Rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
         if ((n = Rio_readn(connfd, buf_file_name, buf_taille[0])) != 0) {
             
             // checking if transfer was complete
@@ -92,9 +92,15 @@ void traiter_demande(int connfd){
                 printf("server read and sent %u bytes\n", (unsigned int)n);
             }
             Close(fd);
+            printf("J'en suis là\n");
+            if(rio_readn(connfd, buf_taille, sizeof(uint32_t)) == -1)
+            {
+                fprintf(stderr, "Error: sending back received file's size failed\n");
+                break;
+            }
+            printf("Et maintenant je suis ici\n");
         }
     }
-
     return;
 }
 

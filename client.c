@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     printf("client connected to server OS\n");
 
     // reading the file name from the user
-    if (Fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL) {
+    while (Fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL) {
 
         //There is a '\n' at the end of the line that need to be removed before sending it to the server
         buf_file_name[strlen(buf_file_name)-1] = '\0';
@@ -75,8 +75,7 @@ int main(int argc, char **argv)
 
             // writing the readen file content to the opened file
             Rio_writen(fd, buf_file_content, n);
-
-            
+            sleep(1);
 
             file_size -= n;
         }
@@ -90,6 +89,11 @@ int main(int argc, char **argv)
             fprintf(stderr, "Error: Too much bytes read\n");
         }
         Close(fd);
+        if(rio_writen(clientfd, &file_size, sizeof(uint32_t)) == -1)
+        {
+            fprintf(stderr, "Error: sending back received file's size failed\n");
+            break;
+        }
     }
 
     Close(clientfd);
