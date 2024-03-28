@@ -55,15 +55,11 @@ void traiter_demande(int connfd){
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading number of char of this file name and file name 
-    if ((Rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) 
-    {
-        if ((n = Rio_readn(connfd, buf_file_name, buf_taille[0])) != 0) 
-        { 
-            printf("%d\n", buf_taille[0]);
-            printf("|%s|\n", buf_file_name);
+    if ((Rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
+        if ((n = Rio_readn(connfd, buf_file_name, buf_taille[0])) != 0) {
+            
             // checking if transfer was complete
-            if (strlen(buf_file_name)+1 != buf_taille[0])
-            {
+            if (strlen(buf_file_name)+1 != buf_taille[0]) {
                 fprintf(stderr, "Error: invalid name received\n");
                 return;
             }
@@ -131,17 +127,14 @@ int main(int argc, char **argv)
     if (getpid() != table_proc[0]) {
         while (1) {
             while ((connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen)) < 0);
+
             /* determine the name of the client */
-            Getnameinfo((SA *) &clientaddr, clientlen,
-                    client_hostname, MAX_NAME_LEN, 0, 0, 0);
+            Getnameinfo((SA *) &clientaddr, clientlen, client_hostname, MAX_NAME_LEN, 0, 0, 0);
 
             /* determine the textual representation of the client's IP address */
-            Inet_ntop(AF_INET, &clientaddr.sin_addr, client_ip_string,
-                    INET_ADDRSTRLEN);
+            Inet_ntop(AF_INET, &clientaddr.sin_addr, client_ip_string, INET_ADDRSTRLEN);
 
-            printf("server connected to %s (%s)\n", client_hostname,
-                    client_ip_string);
-
+            printf("server connected to %s (%s)\n", client_hostname, client_ip_string);
 
             traiter_demande(connfd);
             Close(connfd);

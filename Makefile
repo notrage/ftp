@@ -29,6 +29,7 @@ all: clean $(PROGS) clean_o
 	
 client: client.o $(OBJS)
 	mkdir -p for_client_exchange
+	mkdir -p for_client_exchange/files
 	$(CC) -o for_client_exchange/$@ $(LDFLAGS) $^ $(LIBS)
 
 %: %.o $(OBJS)
@@ -38,7 +39,8 @@ clean_o:
 	rm -f *.o
 
 clean_storage: 
-	find for_client_exchange/. ! -name 'client' -type f -exec rm -f {} +
+	rm -rf for_client_exchange/files/*
+#	 find for_client_exchange/. ! -name 'client' -type f -exec rm -f {} +
 	
 clean:
 	rm -f $(PROGS) *.o for_client_exchange/client
