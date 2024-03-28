@@ -40,7 +40,6 @@ clean_o:
 
 clean_storage: 
 	rm -rf for_client_exchange/files/*
-#	 find for_client_exchange/. ! -name 'client' -type f -exec rm -f {} +
 	
 clean:
 	rm -f $(PROGS) *.o for_client_exchange/client
