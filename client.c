@@ -1,12 +1,8 @@
-/*
- * echoclient.c - An echo client
- */
 #include "csapp.h"
 
 #define MAX_NAME_LEN 256
 #define MAX_BUF_CONTENT 512
 #define CLIENT_DIR "./files/"
-//#define CURRENT_FILE "client"
 
 
 int main(int argc, char **argv)

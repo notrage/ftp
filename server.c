@@ -1,20 +1,15 @@
-/*
- * echoserveri.c - An iterative echo server
- */
-
 #include "csapp.h"
 
 #define MAX_NAME_LEN 256
 #define MAX_BUF_CONTENT 512
 #define NB_PROC 3
 #define SERVER_DIR "./fichiers/"
-//#define CURRENT_FILE "server"
 
 // pour pouvoir gérer la terminaison propre du serveur
+int fd_proc_using[NB_PROC], table_proc[NB_PROC];
 int nb_proc_restant = NB_PROC;
-int fd_proc_using[NB_PROC];
-int table_proc[NB_PROC];
 
+// give the index of the process in the table_proc
 int get_idx_proc(){
     for (int i = 1; i < NB_PROC+1; i++) {
         if (table_proc[i] == getpid()) {
@@ -24,6 +19,7 @@ int get_idx_proc(){
     return -1;
 }
 
+// handler for the signal SIGCHLD
 void sigchildhandler(int sig){
     while (waitpid(-1, NULL, WNOHANG) > 0) {
         nb_proc_restant--;
@@ -33,6 +29,7 @@ void sigchildhandler(int sig){
         exit(0);
 }
 
+// handler for the signal SIGINT
 void siginthandler(int sig){
     int i = get_idx_proc();
     if (fd_proc_using[i] != -1) {
@@ -48,9 +45,7 @@ void siginthandler(int sig){
     exit(0);
 }
 
-void echo(int connfd);
-
-
+// create the children processes
 void creer_fils(){
     pid_t pid;
 
@@ -69,10 +64,11 @@ void creer_fils(){
     return;
 }
 
+// function to treat the client's request
 void traiter_demande(int connfd) {
 
     char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
-        buf_file_path[MAX_NAME_LEN] = SERVER_DIR;
+         buf_file_path[MAX_NAME_LEN] = SERVER_DIR;
     uint32_t buf_taille[1];
     rio_t rio;
     size_t n;
@@ -111,7 +107,6 @@ void traiter_demande(int connfd) {
                 return;
             }
             buf_taille[0] = stats->st_size;
-            printf("%d\n", buf_taille[0]);
 
             // sending it to the client
             if (rio_writen(connfd, buf_taille, sizeof(uint32_t)) < 0) {
