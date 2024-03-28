@@ -8,6 +8,7 @@
 #define MAX_BUF_CONTENT 512
 #define NB_PROC 3
 #define SERVER_DIR "./fichiers/"
+//#define CURRENT_FILE "server"
 
 // pour pouvoir gérer la terminaison propre du serveur
 int nb_proc_restant = NB_PROC;
@@ -68,12 +69,13 @@ void creer_fils(){
     return;
 }
 
-void traiter_demande(int connfd){
-    size_t n;
+void traiter_demande(int connfd) {
+
+    char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
+        buf_file_path[MAX_NAME_LEN] = SERVER_DIR;
     uint32_t buf_taille[1];
-    char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT];
-    char buf_file_path[MAX_NAME_LEN] = SERVER_DIR;
     rio_t rio;
+    size_t n;
     int fd;
     
     struct stat *stats = malloc(sizeof(struct stat));
