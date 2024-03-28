@@ -7,7 +7,7 @@
 #.PRECIOUS: %.o
 
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 LDFLAGS =
 
 # Note: -lnsl does not seem to work on Mac OS but will
@@ -22,14 +22,23 @@ INCLDIR = -I.
 PROGS = server client
 
 
-all: $(PROGS)
+all: clean $(PROGS) clean_o
 
 %.o: %.c $(INCLUDE)
 	$(CC) $(CFLAGS) $(INCLDIR) -c -o $@ $<
 	
+client: client.o $(OBJS)
+	mkdir -p for_client_exchange
+	$(CC) -o for_client_exchange/$@ $(LDFLAGS) $^ $(LIBS)
+
 %: %.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS)
-#	$(CC) -o $@ $(LDFLAGS) $(LIBS) $^
+
+clean_o:
+	rm -f *.o
+
+clean_storage: 
+	find for_client_exchange/. ! -name 'client' -type f -exec rm -f {} +
 	
 clean:
-	rm -f $(PROGS) *.o
+	rm -f $(PROGS) *.o for_client_exchange/client

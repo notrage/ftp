@@ -529,6 +529,7 @@ void Pthread_once(pthread_once_t *once_control, void (*init_function)()) {
  * Wrappers for Posix semaphores
  *******************************/
 
+/*
 void Sem_init(sem_t *sem, int pshared, unsigned int value) 
 {
     if (sem_init(sem, pshared, value) < 0)
@@ -546,6 +547,7 @@ void V(sem_t *sem)
     if (sem_post(sem) < 0)
 	unix_error("V error");
 }
+*/
 
 /*********************************************************************
  * The Rio package - robust I/O functions

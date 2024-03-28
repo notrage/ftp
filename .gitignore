@@ -1,0 +1,4 @@
+for_client_exchange/*
+.nfs*
+client
+server
