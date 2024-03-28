@@ -101,8 +101,6 @@ int main(int argc, char **argv)
                 exit(0);
             }
 
-            
-
             file_size -= n;
         }
         // verifying if the file is complete
