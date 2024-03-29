@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 {
     size_t n;
     int clientfd, port, fd;
-    uint32_t buf[1], file_size;
+    uint32_t buf, file_size, net_buf;
     char *host, buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT], 
         buf_file_path[MAX_NAME_LEN] = CLIENT_DIR;
 
@@ -50,16 +50,16 @@ int main(int argc, char **argv)
 
         //There is a '\n' at the end of the line that need to be removed before sending it to the server
         buf_file_name[strlen(buf_file_name)-1] = '\0';
-
-        buf[0] = strlen(buf_file_name)+1;
+        buf = strlen(buf_file_name)+1;
+        net_buf = htonl(buf);
 
         // according to our protocol, we first send the size of the file name and the file name
-        if (rio_writen(clientfd, buf, sizeof(uint32_t)) < 0) {
+        if (rio_writen(clientfd, &net_buf, sizeof(net_buf)) < 0) {
             fprintf(stderr, "Error: couldn't send the file name size\n");
             Close(clientfd);
             exit(0);
         }
-        if (rio_writen(clientfd, buf_file_name, buf[0]) < 0) {
+        if (rio_writen(clientfd, buf_file_name, buf) < 0) {
             fprintf(stderr, "Error: couldn't send the file name\n");
             Close(clientfd);
             exit(0);
@@ -76,8 +76,8 @@ int main(int argc, char **argv)
         }
         
         // getting size of wanted file
-        if ((n = rio_readn(clientfd, buf, sizeof(uint32_t))) != 0) {
-            file_size = buf[0];
+        if ((n = rio_readn(clientfd, &buf, sizeof(uint32_t))) != 0) {
+            file_size = buf;
         } else {
             fprintf(stderr, "Error: Couldn't get file size\n");
             if (close(fd) < 0) {

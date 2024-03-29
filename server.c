@@ -69,7 +69,7 @@ void traiter_demande(int connfd) {
 
     char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
          buf_file_path[MAX_NAME_LEN];
-    uint32_t buf_taille[1];
+    uint32_t buf_taille;
     rio_t rio;
     size_t n;
     int fd;
@@ -77,12 +77,14 @@ void traiter_demande(int connfd) {
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading number of char of this file name and file name 
-    while ((rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
+    while ((rio_readn(connfd, &buf_taille, sizeof(uint32_t)) != 0)) {
 
-        if ((n = rio_readn(connfd, buf_file_name, buf_taille[0])) != 0) {
+        buf_taille = ntohl(buf_taille);
+        printf("server received %u bytes\n", (unsigned int)buf_taille);
+        if ((n = rio_readn(connfd, buf_file_name, buf_taille)) != 0) {
             
             // checking if transfer was complete
-            if (strlen(buf_file_name)+1 != buf_taille[0]) {
+            if (strlen(buf_file_name)+1 != buf_taille) {
                 fprintf(stderr, "Error: invalid name received\n");
                 free(stats);
                 return;
@@ -110,10 +112,10 @@ void traiter_demande(int connfd) {
                 free(stats);
                 return;
             }
-            buf_taille[0] = stats->st_size;
+            buf_taille = stats->st_size;
 
             // sending it to the client
-            if (rio_writen(connfd, buf_taille, sizeof(uint32_t)) < 0) {
+            if (rio_writen(connfd, &buf_taille, sizeof(uint32_t)) < 0) {
                 fprintf(stderr, "Error: can't send the file size\n");
                 free(stats);
                 return;
