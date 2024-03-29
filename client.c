@@ -5,6 +5,14 @@
 #define CLIENT_DIR "./files/"
 
 
+int min(int a, int b) {
+    if (a < b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 int main(int argc, char **argv)
 {
     size_t n;
@@ -36,9 +44,9 @@ int main(int argc, char **argv)
      * has not yet called "Accept" for this connection
      */
     printf("client connected to server OS\n");
-
+    printf("Enter the name of the file you want to download: \n");
     // reading the file name from the user
-    if (fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL) {
+    while (fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL) {
 
         //There is a '\n' at the end of the line that need to be removed before sending it to the server
         buf_file_name[strlen(buf_file_name)-1] = '\0';
@@ -61,13 +69,13 @@ int main(int argc, char **argv)
         strcat(buf_file_path, buf_file_name);
 
         // opening (creating) a file to store server's response
-        if ((fd = Open(buf_file_path, O_WRONLY | O_CREAT, 0644)) < 0) {
+        if ((fd = open(buf_file_path, O_WRONLY | O_CREAT, 0644)) < 0) {
             fprintf(stderr, "Error: couldn't open the file: %s\n", buf_file_path);
             Close(clientfd);
             exit(0);
         }
         
-        // getting wanted size of wanted file
+        // getting size of wanted file
         if ((n = rio_readn(clientfd, buf, sizeof(uint32_t))) != 0) {
             file_size = buf[0];
         } else {
@@ -85,7 +93,7 @@ int main(int argc, char **argv)
         sleep(1);
 
         // while we can read something from server
-        while((n = rio_readn(clientfd, buf_file_content, MAX_BUF_CONTENT)) != 0) {
+        while((n = rio_readn(clientfd, buf_file_content, min(MAX_BUF_CONTENT, file_size))) != 0) {
 
             printf("client received %u bytes from server\n", (unsigned int)n);
 
@@ -103,6 +111,7 @@ int main(int argc, char **argv)
 
             file_size -= n;
         }
+
         // verifying if the file is complete
         if (file_size == 0) {
             fprintf(stdout, "The requested file is complete... ending transmission\n");
@@ -114,9 +123,11 @@ int main(int argc, char **argv)
         if (close(fd) < 0) {
             fprintf(stderr, "Error: couldn't close the file\n");
         }
-    } else {
-        fprintf(stderr, "Error: couldn't read the given file name\n");
-    }
+        printf("\nEnter the name of the file you want to download: \n");
+    } 
+    // else {
+    //     fprintf(stderr, "Error: couldn't read the given file name\n");
+    // }
 
     if (close(clientfd) < 0) {
         fprintf(stderr, "Error: couldn't close the connection\n");

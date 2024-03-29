@@ -68,7 +68,7 @@ void creer_fils(){
 void traiter_demande(int connfd) {
 
     char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
-         buf_file_path[MAX_NAME_LEN] = SERVER_DIR;
+         buf_file_path[MAX_NAME_LEN];
     uint32_t buf_taille[1];
     rio_t rio;
     size_t n;
@@ -77,17 +77,19 @@ void traiter_demande(int connfd) {
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading number of char of this file name and file name 
-    if ((rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
+    while ((rio_readn(connfd, buf_taille, sizeof(uint32_t)) != 0)) {
 
         if ((n = rio_readn(connfd, buf_file_name, buf_taille[0])) != 0) {
             
             // checking if transfer was complete
             if (strlen(buf_file_name)+1 != buf_taille[0]) {
                 fprintf(stderr, "Error: invalid name received\n");
+                free(stats);
                 return;
             }
     
             // adding the path to open the asked file
+            strcpy(buf_file_path, SERVER_DIR);
             strcat(buf_file_path, buf_file_name);
             printf("file to send : %s\n", buf_file_path);
     
@@ -95,6 +97,7 @@ void traiter_demande(int connfd) {
             fd = open(buf_file_path, O_RDONLY, 0);
             if (fd == -1) {
                 fprintf(stderr, "Error: can't open the file: %s\n", buf_file_path);
+                free(stats);
                 return;
             }
 
@@ -104,6 +107,7 @@ void traiter_demande(int connfd) {
             // getting the size of the asked file
             if (fstat(fd, stats) == -1) {
                 fprintf(stderr,"Error:  fstat bad address\n");
+                free(stats);
                 return;
             }
             buf_taille[0] = stats->st_size;
@@ -111,9 +115,9 @@ void traiter_demande(int connfd) {
             // sending it to the client
             if (rio_writen(connfd, buf_taille, sizeof(uint32_t)) < 0) {
                 fprintf(stderr, "Error: can't send the file size\n");
+                free(stats);
                 return;
             }
-            free(stats);
 
             // while we can read something in the opened file
             while((n = rio_readnb(&rio, buf_file_content, MAX_BUF_CONTENT)) != 0) {
@@ -121,23 +125,28 @@ void traiter_demande(int connfd) {
                 // sending to the client the readen file content
                 if (rio_writen(connfd, buf_file_content, n) < 0) {
                     fprintf(stderr, "Error: can't send the file content\n");
+                    free(stats);
                     return;
                 }
                 printf("server read and sent %u bytes\n", (unsigned int)n);
             }
+
             if (close(fd) < 0) {
                 fprintf(stderr, "Error: can't close the file: %s\n", buf_file_path);
+                free(stats);
                 return;
             }
         } else {
             fprintf(stderr, "Error: invalid name received\n");
+            free(stats);
             return;
         }
-    } else {
-        fprintf(stderr, "Error: invalid name lenght received\n");
-        return;
-    }
-
+    } 
+    // else {
+    //     fprintf(stderr, "Error: invalid name lenght received\n");
+    //     return;
+    // }
+    free(stats);
     return;
 }
 
@@ -181,13 +190,11 @@ int main(int argc, char **argv)
             if (getnameinfo((SA *) &clientaddr, clientlen, client_hostname, MAX_NAME_LEN, 0, 0, 
                     0) != 0) {
                 fprintf(stderr, "Error: can't determine the name of the client\n");
-                exit(0);
             }
 
             /* determine the textual representation of the client's IP address */
             if (inet_ntop(AF_INET, &clientaddr.sin_addr, client_ip_string, INET_ADDRSTRLEN) == NULL) {
                 fprintf(stderr, "Error: can't determine the IP address of the client\n");
-                exit(0);
             }
 
             printf("server connected to %s (%s)\n", client_hostname, client_ip_string);
@@ -195,7 +202,6 @@ int main(int argc, char **argv)
             traiter_demande(connfd);
             if (close(connfd) < 0) {
                 fprintf(stderr, "Error: can't close the connection\n");
-                exit(0);
             }
             fd_proc_using[get_idx_proc(table_proc)] = -1;
             printf("client ended connection\n");
@@ -204,7 +210,6 @@ int main(int argc, char **argv)
         fd_proc_using[0] = listenfd;
         if (close(listenfd) < 0) {
             fprintf(stderr, "Error: can't close the connection\n");
-            exit(0);
         }
         pause();
     }
