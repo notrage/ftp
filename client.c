@@ -65,6 +65,7 @@ void traiter_echange_server(int clientfd)
         }
         buf_int = htonl(stats->st_size);
 
+
         if (rio_writen(clientfd, &buf_int, sizeof(uint32_t)) < 0)
         {
             fprintf(stderr, "Error: couldn't send the local file size\n");

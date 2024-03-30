@@ -6,7 +6,8 @@
 #define NB_PROC 3
 
 // to manage the clean termination of the server
-int fd_proc_using[NB_PROC + 1], table_proc[NB_PROC + 1];
+int fd, connfd, listenfd;
+int table_proc[NB_PROC + 1];
 int nb_proc_restant = NB_PROC;
 
 // give the index of the process in the table_proc
@@ -39,19 +40,32 @@ void sigchildhandler(int sig)
 // handler for the signal SIGINT
 void siginthandler(int sig)
 {
-    int idx = get_idx_proc();
-    if (fd_proc_using[idx] != -1)
+    printf("connfd: %d\n", connfd);
+    printf("fd: %d\n", fd);
+    printf("listenfd: %d\n", listenfd);
+    if (fd != -1)
     {
-        if (close(fd_proc_using[idx]) < 0)
+        if (close(fd) < 0)
+        {
+            fprintf(stderr, "Error: can't close the file\n");
+            exit(0);
+        }
+    }
+    if (connfd != -1)
+    {
+        if (close(connfd) < 0)
         {
             fprintf(stderr, "Error: can't close the connection\n");
             exit(0);
         }
     }
-    if (close(fd_proc_using[0]) < 0)
+    if (listenfd != -1)
     {
-        fprintf(stderr, "Error: can't close the connection\n");
-        exit(0);
+        if (close(listenfd) < 0)
+        {
+            fprintf(stderr, "Error: can't close the connection\n");
+            exit(0);
+        }
     }
     exit(0);
 }
@@ -73,7 +87,8 @@ void creer_fils()
         else
         {
             table_proc[idx] = pid;
-            fd_proc_using[idx] = -1;
+            connfd = -1;
+            fd = -1;
         }
     }
 
@@ -87,12 +102,16 @@ void traiter_requete(int connfd)
     char buf_file_name[MAX_NAME_LEN], buf_file_path[MAX_NAME_LEN],
         buf_file_content[MAX_BUF_CONTENT];
     uint32_t buf_int;
-    int fd, i;
     rio_t rio;
     size_t n;
+    int i;
+
+    printf("%d\n", connfd);
 
     // initialisation of the stats structure
     struct stat *stats = malloc(sizeof(struct stat));
+
+
 
     // reading number of char of this file name and file name
     while ((rio_readn(connfd, &buf_int, sizeof(uint32_t)) != 0))
@@ -199,6 +218,7 @@ void traiter_requete(int connfd)
         printf("\nAble to send another file\n");
     }
     free(stats);
+    fd = -1;
     return;
 }
 
@@ -208,7 +228,7 @@ void traiter_requete(int connfd)
  */
 int main(int argc, char **argv)
 {
-    int listenfd, connfd, port;
+    int port;
     socklen_t clientlen;
     struct sockaddr_in clientaddr;
     char client_ip_string[INET_ADDRSTRLEN], client_hostname[MAX_NAME_LEN];
@@ -241,8 +261,6 @@ int main(int argc, char **argv)
             while ((connfd = accept(listenfd, (SA *)&clientaddr, &clientlen)) < 0)
                 ;
 
-            fd_proc_using[get_idx_proc(table_proc)] = connfd;
-
             /* determine the name of the client */
             if (getnameinfo((SA *)&clientaddr, clientlen, client_hostname, MAX_NAME_LEN, 0, 0,
                             0) != 0)
@@ -263,13 +281,12 @@ int main(int argc, char **argv)
             {
                 fprintf(stderr, "Error: can't close the connection\n");
             }
-            fd_proc_using[get_idx_proc(table_proc)] = -1;
+            connfd = -1;
             printf("client ended connection\n");
         }
     }
     else
     {
-        fd_proc_using[0] = listenfd;
         if (close(listenfd) < 0)
         {
             fprintf(stderr, "Error: can't close the connection\n");
