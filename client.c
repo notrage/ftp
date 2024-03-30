@@ -1,30 +1,18 @@
 #include "csapp.h"
-#include "time.h"
 
 #define MAX_NAME_LEN 256
 #define MAX_BUF_CONTENT 512
 #define CLIENT_DIR "./files/"
 
-int min(int a, int b)
-{
-    if (a < b)
-    {
-        return a;
-    }
-    else
-    {
-        return b;
-    }
-}
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 void traiter_echange_server(int clientfd)
 {
-
     char buf_file_name[MAX_NAME_LEN], buf_file_path[MAX_NAME_LEN],
         buf_file_content[MAX_BUF_CONTENT];
-    uint32_t buf, file_size, net_buf;
+    uint32_t buf_int, file_size, net_buf_int;
     clock_t start, end;
-    double time_taken;
+    double time_diff;
     int fd, i;
     size_t n;
 
@@ -38,17 +26,17 @@ void traiter_echange_server(int clientfd)
 
         // There is a '\n' at the end of the line that need to be removed before sending it to the server
         buf_file_name[strlen(buf_file_name) - 1] = '\0';
-        buf = strlen(buf_file_name) + 1;
-        net_buf = htonl(buf);
+        buf_int = strlen(buf_file_name) + 1;
+        net_buf_int = htonl(buf_int);
 
         // according to our protocol, we first send the size of the file name and the file name
-        if (rio_writen(clientfd, &net_buf, sizeof(net_buf)) < 0)
+        if (rio_writen(clientfd, &net_buf_int, sizeof(net_buf_int)) < 0)
         {
             fprintf(stderr, "Error: couldn't send the file name size\n");
             Close(clientfd);
             exit(0);
         }
-        if (rio_writen(clientfd, buf_file_name, buf) < 0)
+        if (rio_writen(clientfd, buf_file_name, buf_int) < 0)
         {
             fprintf(stderr, "Error: couldn't send the file name\n");
             Close(clientfd);
@@ -67,7 +55,7 @@ void traiter_echange_server(int clientfd)
             exit(0);
         }
 
-        // getting open file's size. If not 0, it means previous downloading was stopped during
+        // getting opened file's size. If not 0, it means previous downloading was stopped during
         // process, implying we must restart its download where it stopped
         if (fstat(fd, stats) == -1)
         {
@@ -75,21 +63,22 @@ void traiter_echange_server(int clientfd)
             free(stats);
             return;
         }
-        buf = htonl(stats->st_size);
+        buf_int = htonl(stats->st_size);
 
-        if (rio_writen(clientfd, &buf, sizeof(uint32_t)) < 0)
+        if (rio_writen(clientfd, &buf_int, sizeof(uint32_t)) < 0)
         {
             fprintf(stderr, "Error: couldn't send the local file size\n");
             Close(clientfd);
             exit(0);
         }
 
-        lseek(fd, ntohl(buf), SEEK_SET);
+        // if file was already partially downloaded, we begin the download where it stopped
+        lseek(fd, ntohl(buf_int), SEEK_SET);
 
         // getting size of wanted file
-        if ((n = rio_readn(clientfd, &buf, sizeof(uint32_t))) != 0)
+        if ((n = rio_readn(clientfd, &buf_int, sizeof(uint32_t))) != 0)
         {
-            file_size = ntohl(buf);
+            file_size = ntohl(buf_int);
         }
         else
         {
@@ -110,7 +99,7 @@ void traiter_echange_server(int clientfd)
 
         i = 0;
         // while we can read something from server
-        while ((n = rio_readn(clientfd, buf_file_content, min(MAX_BUF_CONTENT, file_size))) != 0)
+        while ((n = rio_readn(clientfd, buf_file_content, MIN(MAX_BUF_CONTENT, file_size))) != 0)
         {
             // writing the readen file content to the opened file
             if (rio_writen(fd, buf_file_content, n) < 0)
@@ -160,10 +149,10 @@ void traiter_echange_server(int clientfd)
         {
             fprintf(stderr, "Error: couldn't close the file\n");
         }
-        
-        time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+
+        time_diff = (double)(end - start) / CLOCKS_PER_SEC;
         printf("Time taken to download the file: %f seconds (%i Kbytes/s)\n", 
-            time_taken, (int)((ntohl(buf) / time_taken) / 1024));
+            time_diff, (int)((ntohl(buf_int) / time_diff) / 1024));
         printf("\nEnter the name of the file you want to download: \n");
     }
     free(stats);
