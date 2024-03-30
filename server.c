@@ -90,7 +90,7 @@ void traiter_demande(int connfd) {
                 return;
             }
     
-            // adding the path to open the asked file
+            // formating the path to open the asked file
             strcpy(buf_file_path, SERVER_DIR);
             strcat(buf_file_path, buf_file_name);
             printf("file to send : %s\n", buf_file_path);
