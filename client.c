@@ -1,4 +1,5 @@
 #include "csapp.h"
+#include "time.h"
 
 #define MAX_NAME_LEN 256
 #define MAX_BUF_CONTENT 512
@@ -19,16 +20,21 @@ int min(int a, int b)
 void traiter_echange_server(int clientfd)
 {
 
-    size_t n;
-    int fd, i;
+    char buf_file_name[MAX_NAME_LEN], buf_file_path[MAX_NAME_LEN],
+        buf_file_content[MAX_BUF_CONTENT];
     uint32_t buf, file_size, net_buf;
-    char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
-        buf_file_path[MAX_NAME_LEN] = CLIENT_DIR;
+    clock_t start, end;
+    double time_taken;
+    int fd, i;
+    size_t n;
+
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading the file name from the user
     while (fgets(buf_file_name, MAX_NAME_LEN, stdin) != NULL)
     {
+        // getting the time at the beginning of the download
+        start = clock();
 
         // There is a '\n' at the end of the line that need to be removed before sending it to the server
         buf_file_name[strlen(buf_file_name) - 1] = '\0';
@@ -106,9 +112,6 @@ void traiter_echange_server(int clientfd)
         // while we can read something from server
         while ((n = rio_readn(clientfd, buf_file_content, min(MAX_BUF_CONTENT, file_size))) != 0)
         {
-
-            printf("\rclient read %u bytes [x%d]", (unsigned int)n, ++i);
-
             // writing the readen file content to the opened file
             if (rio_writen(fd, buf_file_content, n) < 0)
             {
@@ -125,12 +128,25 @@ void traiter_echange_server(int clientfd)
             }
 
             file_size -= n;
+
+            if (n == MAX_BUF_CONTENT)
+            {
+                printf("\rclient read and wrote %u bytes [x%d]", (unsigned int)n, ++i);
+            }
+            else
+            {
+                printf("\nclient read and wrote %u bytes", (unsigned int)n);
+            }
         }
+        printf("\n");
+
+        // getting the time at this end of the download
+        end = clock();
 
         // verifying if the file is complete
         if (file_size == 0)
         {
-            fprintf(stdout, "The requested file is complete... ending transmission\n");
+            fprintf(stdout, "The requested file file transfer is complete\n");
         }
         else if (file_size > 0)
         {
@@ -144,6 +160,10 @@ void traiter_echange_server(int clientfd)
         {
             fprintf(stderr, "Error: couldn't close the file\n");
         }
+        
+        time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+        printf("Time taken to download the file: %f seconds (%i Kbytes/s)\n", 
+            time_taken, (int)((ntohl(buf) / time_taken) / 1024));
         printf("\nEnter the name of the file you want to download: \n");
     }
     free(stats);

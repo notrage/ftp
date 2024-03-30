@@ -83,27 +83,27 @@ void creer_fils()
 // function to treat the client's request
 void traiter_requete(int connfd)
 {
-
-    char buf_file_name[MAX_NAME_LEN], buf_file_content[MAX_BUF_CONTENT],
-        buf_file_path[MAX_NAME_LEN];
-    uint32_t buf_taille;
+    printf("\nAble to send a file\n");
+    char buf_file_name[MAX_NAME_LEN], buf_file_path[MAX_NAME_LEN],
+        buf_file_content[MAX_BUF_CONTENT];
+    uint32_t buf_int;
+    int fd, i;
     rio_t rio;
     size_t n;
-    int fd, i;
 
+    // initialisation of the stats structure
     struct stat *stats = malloc(sizeof(struct stat));
 
     // reading number of char of this file name and file name
-    while ((rio_readn(connfd, &buf_taille, sizeof(uint32_t)) != 0))
+    while ((rio_readn(connfd, &buf_int, sizeof(uint32_t)) != 0))
     {
+        buf_int = ntohl(buf_int);
 
-        buf_taille = ntohl(buf_taille);
-        //printf("server received %u bytes\n", (unsigned int)buf_taille);
-        if ((n = rio_readn(connfd, buf_file_name, buf_taille)) != 0)
+        if ((n = rio_readn(connfd, buf_file_name, buf_int)) != 0)
         {
 
             // checking if transfer was complete
-            if (strlen(buf_file_name) + 1 != buf_taille)
+            if (strlen(buf_file_name) + 1 != buf_int)
             {
                 fprintf(stderr, "Error: invalid name received\n");
                 free(stats);
@@ -113,7 +113,6 @@ void traiter_requete(int connfd)
             // formating the path to open the asked file
             strcpy(buf_file_path, SERVER_DIR);
             strcat(buf_file_path, buf_file_name);
-            //printf("file to send : %s\n", buf_file_path);
 
             // opening the asked file and initialisation of the buffer on opened file
             fd = open(buf_file_path, O_RDONLY, 0);
@@ -136,14 +135,13 @@ void traiter_requete(int connfd)
             }
 
             // receiving the file size on the client side
-            if ((n = rio_readn(connfd, &buf_taille, sizeof(uint32_t))) != 0)
+            if (rio_readn(connfd, &buf_int, sizeof(uint32_t)) != 0)
             {
-
                 // if file was already partially downloaded, we begin the download where it stopped
-                lseek(fd, ntohl(buf_taille), SEEK_SET);
+                lseek(fd, ntohl(buf_int), SEEK_SET);
 
-                // comparing server side file size with client side file size
-                buf_taille = htonl(stats->st_size - ntohl(buf_taille));
+                // calculate the remaining size to send
+                buf_int = htonl(stats->st_size - ntohl(buf_int));
             }
             else
             {
@@ -153,12 +151,14 @@ void traiter_requete(int connfd)
             }
 
             // sending it to the client
-            if (rio_writen(connfd, &buf_taille, sizeof(uint32_t)) < 0)
+            if (rio_writen(connfd, &buf_int, sizeof(uint32_t)) < 0)
             {
                 fprintf(stderr, "Error: can't send the file size\n");
                 free(stats);
                 return;
             }
+
+            printf("server will send %u bytes:\n", ntohl(buf_int));
 
             i = 0;
             // while we can read something in the opened file
@@ -172,8 +172,16 @@ void traiter_requete(int connfd)
                     free(stats);
                     return;
                 }
-                printf("\rserver read and sent %u bytes [x%d]", (unsigned int)n, ++i);
+                if (n == MAX_BUF_CONTENT)
+                {
+                    printf("\rserver read and sent %u bytes [x%d]", (unsigned int)n, ++i);
+                }
+                else 
+                {
+                    printf("\nserver read and sent %u bytes", (unsigned int)n);
+                }
             }
+            printf("\n");
 
             if (close(fd) < 0)
             {
@@ -188,6 +196,7 @@ void traiter_requete(int connfd)
             free(stats);
             return;
         }
+        printf("\nAble to send another file\n");
     }
     free(stats);
     return;
@@ -255,7 +264,7 @@ int main(int argc, char **argv)
                 fprintf(stderr, "Error: can't close the connection\n");
             }
             fd_proc_using[get_idx_proc(table_proc)] = -1;
-            printf("\nclient ended connection\n");
+            printf("client ended connection\n");
         }
     }
     else
