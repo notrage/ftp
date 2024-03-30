@@ -1,6 +1,6 @@
 #include "csapp.h"
 
-#define SERVER_DIR "./fichiers/"
+#define SERVER_DIR "./files/"
 #define MAX_BUF_CONTENT 512
 #define MAX_NAME_LEN 256
 #define NB_PROC 3

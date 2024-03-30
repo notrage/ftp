@@ -1,4 +1,2 @@
-for_client_exchange/*
-.nfs*
-client
-server
+client_app/*
+server_app/server

@@ -16,7 +16,7 @@ LDFLAGS =
 LIBS += -lpthread
 
 INCLUDE = csapp.h
-OBJS = csapp.o echo.o
+OBJS = csapp.o
 INCLDIR = -I.
 
 PROGS = server client
@@ -28,9 +28,14 @@ all: clean $(PROGS) clean_o
 	$(CC) $(CFLAGS) $(INCLDIR) -c -o $@ $<
 	
 client: client.o $(OBJS)
-	mkdir -p for_client_exchange
-	mkdir -p for_client_exchange/files
-	$(CC) -o for_client_exchange/$@ $(LDFLAGS) $^ $(LIBS)
+	mkdir -p client_app
+	mkdir -p client_app/files
+	$(CC) -o client_app/$@ $(LDFLAGS) $^ $(LIBS)
+
+server: server.o $(OBJS)
+	mkdir -p server_app
+	mkdir -p server_app/files
+	$(CC) -o server_app/$@ $(LDFLAGS) $^ $(LIBS)
 
 %: %.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS)
@@ -39,7 +44,7 @@ clean_o:
 	rm -f *.o
 
 clean_storage: 
-	rm -rf for_client_exchange/files/*
+	rm -rf client_app/files/*
 	
 clean:
-	rm -f $(PROGS) *.o for_client_exchange/client
+	rm -f $(PROGS) *.o client_app/client
