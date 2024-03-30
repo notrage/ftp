@@ -10,10 +10,10 @@ void traiter_echange_server(int clientfd)
 {
     char buf_file_name[MAX_NAME_LEN], buf_file_path[MAX_NAME_LEN],
         buf_file_content[MAX_BUF_CONTENT];
-    uint32_t buf_int, file_size, net_buf_int;
+    uint32_t buf_int, net_buf_int, file_size, total_file_size;
     clock_t start, end;
     double time_diff;
-    int fd, i;
+    int fd;
     size_t n;
 
     struct stat *stats = malloc(sizeof(struct stat));
@@ -97,7 +97,7 @@ void traiter_echange_server(int clientfd)
         printf("requesting to download: %d bytes...\n", file_size);
         sleep(1);
 
-        i = 0;
+        total_file_size = file_size;
         // while we can read something from server
         while ((n = rio_readn(clientfd, buf_file_content, MIN(MAX_BUF_CONTENT, file_size))) != 0)
         {
@@ -118,14 +118,22 @@ void traiter_echange_server(int clientfd)
 
             file_size -= n;
 
-            if (n == MAX_BUF_CONTENT)
-            {
-                printf("\rclient read and wrote %u bytes [x%d]", (unsigned int)n, ++i);
+            // calculate the percentage of bytes downloaded
+            int percent = ((total_file_size - file_size) * 100) / total_file_size;
+
+            // print the progress bar
+            printf("\r[");
+            for (int i = 0; i < percent / 2; i++) {
+                printf("#");
             }
-            else
-            {
-                printf("\nclient read and wrote %u bytes", (unsigned int)n);
+            for (int i = percent / 2; i < 50; i++) {
+                printf(" ");
             }
+            printf("] %d%%", percent);
+
+            fflush(stdout);  // Force the output to be printed immediately
+
+            //usleep(1000);
         }
         printf("\n");
 
@@ -133,15 +141,11 @@ void traiter_echange_server(int clientfd)
         end = clock();
 
         // verifying if the file is complete
-        if (file_size == 0)
-        {
-            fprintf(stdout, "The requested file file transfer is complete\n");
-        }
-        else if (file_size > 0)
+        if (file_size > 0)
         {
             fprintf(stderr, "Error: File missing parts\n");
         }
-        else
+        else if (file_size < 0)
         {
             fprintf(stderr, "Error: Too much bytes read\n");
         }
