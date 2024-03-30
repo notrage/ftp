@@ -4,6 +4,7 @@
 #define MAX_BUF_CONTENT 512
 #define MAX_NAME_LEN 256
 #define NB_PROC 3
+#define PORT 2121
 
 // to manage the clean termination of the server
 int fd, connfd, listenfd;
@@ -40,9 +41,6 @@ void sigchildhandler(int sig)
 // handler for the signal SIGINT
 void siginthandler(int sig)
 {
-    printf("connfd: %d\n", connfd);
-    printf("fd: %d\n", fd);
-    printf("listenfd: %d\n", listenfd);
     if (fd != -1)
     {
         if (close(fd) < 0)
@@ -228,7 +226,6 @@ void traiter_requete(int connfd)
  */
 int main(int argc, char **argv)
 {
-    int port;
     socklen_t clientlen;
     struct sockaddr_in clientaddr;
     char client_ip_string[INET_ADDRSTRLEN], client_hostname[MAX_NAME_LEN];
@@ -236,16 +233,15 @@ int main(int argc, char **argv)
     Signal(SIGCHLD, sigchildhandler);
     Signal(SIGINT, SIG_IGN);
 
-    if (argc != 2)
+    if (argc != 1)
     {
-        fprintf(stderr, "usage: %s <port>\n", argv[0]);
+        fprintf(stderr, "usage: %s\n", argv[0]);
         exit(0);
     }
 
-    port = atoi(argv[1]);
     clientlen = (socklen_t)sizeof(clientaddr);
 
-    if ((listenfd = open_listenfd(port)) < 0)
+    if ((listenfd = open_listenfd(PORT)) < 0)
     {
         fprintf(stderr, "Error: can't open the listenfd\n");
         exit(0);

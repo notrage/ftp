@@ -1,5 +1,6 @@
 #include "csapp.h"
 
+#define PORT 2121
 #define MAX_NAME_LEN 256
 #define MAX_BUF_CONTENT 512
 #define CLIENT_DIR "./files/"
@@ -168,22 +169,21 @@ int main(int argc, char **argv)
 {
 
     char *host;
-    int clientfd, port;
+    int clientfd;
 
-    if (argc != 3)
+    if (argc != 2)
     {
-        fprintf(stderr, "usage: %s <host> <port>\n", argv[0]);
+        fprintf(stderr, "usage: %s <host>\n", argv[0]);
         exit(0);
     }
     host = argv[1];
-    port = atoi(argv[2]);
 
     /*
      * Note that the 'host' can be a name or an IP address.
      * If necessary, Open_clientfd will perform the name resolution
      * to obtain the IP address.
      */
-    if ((clientfd = open_clientfd(host, port)) < 0)
+    if ((clientfd = open_clientfd(host, PORT)) < 0)
     {
         fprintf(stderr, "Error: couldn't connect to the server\n");
         exit(0);
