@@ -1,5 +1,5 @@
 # File Transfer Protocol
-This is a university project that aim to create a file transfer server to a client using the network
+This is a university project (in collaboration with [Axel Deleuze-Dordron](https://github.com/Stonksmen)) that aim to create a file transfer server to a client using the network
 ## How to use ?
 - First of all, you will need to clone this git repository: git clone git@github.com:notrage/ftp.git
 - You will need to compile this project using this command : `make`
