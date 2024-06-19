@@ -1,6 +1,6 @@
 # File Transfer Protocol
 This is a university project (in collaboration with [Axel Deleuze-Dordron](https://github.com/Stonksmen)) that aim to create a file transfer server to a client using the network.
-## How to use ?
+## Installation
 1. Clone this git repository :
 ```bash
 git clone git@github.com:notrage/ftp.git
