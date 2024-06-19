@@ -25,4 +25,4 @@ make
 ```bash
 <file_name>
 ```
-For now, it is possible to connect 3 independant clients to the server, but this number can be increased by modifying the `NB_PROC` constant in the `server.c` file !
+For now, it is possible to connect 3 independant clients to the server, but this number can be increased by modifying the `NB_PROC` constant in the `server.c` file.
